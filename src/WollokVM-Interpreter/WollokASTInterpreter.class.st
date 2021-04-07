@@ -45,10 +45,35 @@ WollokASTInterpreter >> resolve: aString [
 	^ bindings at: aString
 ]
 
+{ #category : #'as yet unclassified' }
+WollokASTInterpreter >> visitBinaryOperation: aWollokBinaryOperationNode [ 
+		
+	|leftValue rightValue operation| 	
+	leftValue:= aWollokBinaryOperationNode leftOperand acceptVisitor: self.
+	rightValue := aWollokBinaryOperationNode rightOperand acceptVisitor: self.
+	operation := aWollokBinaryOperationNode operation value asSymbol.
+	leftValue literalValue perform: operation with: rightValue literalValue. 
+]
+
+{ #category : #visiting }
+WollokASTInterpreter >> visitBooleanLiteral: aWollokBooleanLiteralNode [ 
+
+	^ self wollokBooleanFrom: aWollokBooleanLiteralNode booleanValue 
+]
+
 { #category : #visiting }
 WollokASTInterpreter >> visitNumberLiteral: aWollokNumberLiteralNode [ 
 
 	^ self wollokNumberFrom: aWollokNumberLiteralNode numberValue
+]
+
+{ #category : #literals }
+WollokASTInterpreter >> wollokBooleanFrom: aBoolean [ 
+
+	^ WollokVMLiteral new
+		wollokClass: (self resolve: 'wollok.lang.Boolean');
+		literalValue: aBoolean ;
+		yourself
 ]
 
 { #category : #literals }
