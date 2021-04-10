@@ -39,20 +39,40 @@ WollokASTInterpreter >> interpretProgram: aFileNode [
 	^ lastValue	
 ]
 
+{ #category : #comparing }
+WollokASTInterpreter >> isFalse: aValue [
+
+	^aValue not 
+]
+
 { #category : #bindings }
 WollokASTInterpreter >> resolve: aString [ 
 	
 	^ bindings at: aString
 ]
 
+{ #category : #processing }
+WollokASTInterpreter >> transform: anOperationString [
+
+	anOperationString = '&&' ifTrue:[^#&].
+	
+	anOperationString = '||' ifTrue:[^#|].
+
+	anOperationString = '===' ifTrue:[^#=].
+	
+	self notYetImplemented 
+]
+
 { #category : #'as yet unclassified' }
 WollokASTInterpreter >> visitBinaryOperation: aWollokBinaryOperationNode [ 
 		
 	|leftValue rightValue operation| 	
+		
 	leftValue:= aWollokBinaryOperationNode leftOperand acceptVisitor: self.
 	rightValue := aWollokBinaryOperationNode rightOperand acceptVisitor: self.
-	operation := aWollokBinaryOperationNode operation value asSymbol.
-	leftValue literalValue perform: operation with: rightValue literalValue. 
+	operation :=self transform: (aWollokBinaryOperationNode operation value).
+	
+	^leftValue literalValue perform: operation with: rightValue literalValue. 
 ]
 
 { #category : #visiting }
