@@ -67,21 +67,25 @@ WollokASTInterpreter >> transform: anOperationString [
 	
 	anOperationString = '||' ifTrue:[^#|].
 
-	anOperationString = '===' ifTrue:[^#=].
+	anOperationString = '==' ifTrue:[^#=].	
+
+	anOperationString = '===' ifTrue:[^#==].
 	
-	self notYetImplemented 
+	^anOperationString asSymbol  
 ]
 
 { #category : #'as yet unclassified' }
 WollokASTInterpreter >> visitBinaryOperation: aWollokBinaryOperationNode [ 
 		
-	|leftValue rightValue operation| 	
+	|leftValue rightValue operation value| 	
 		
 	leftValue:= aWollokBinaryOperationNode leftOperand acceptVisitor: self.
 	rightValue := aWollokBinaryOperationNode rightOperand acceptVisitor: self.
 	operation :=self transform: (aWollokBinaryOperationNode operation value).
 	
-	^leftValue literalValue perform: operation with: rightValue literalValue. 
+	value := leftValue literalValue perform: operation with: rightValue literalValue. 
+	
+	^self wollokVMLiteralFrom: value
 ]
 
 { #category : #visiting }
@@ -94,6 +98,11 @@ WollokASTInterpreter >> visitBooleanLiteral: aWollokBooleanLiteralNode [
 WollokASTInterpreter >> visitNumberLiteral: aWollokNumberLiteralNode [ 
 
 	^ self wollokNumberFrom: aWollokNumberLiteralNode numberValue
+]
+
+{ #category : #'as yet unclassified' }
+WollokASTInterpreter >> visitUnaryOperation: aWollokUnaryOperationNode [ 
+	self shouldBeImplemented.
 ]
 
 { #category : #literals }
@@ -112,4 +121,12 @@ WollokASTInterpreter >> wollokNumberFrom: anInteger [
 		wollokClass: (self resolve: 'wollok.lang.Number');
 		literalValue: anInteger;
 		yourself
+]
+
+{ #category : #transforming }
+WollokASTInterpreter >> wollokVMLiteralFrom: aValue [
+	(aValue isKindOf: Boolean)
+		ifTrue: [ ^ self wollokBooleanFrom: aValue ].
+	(aValue isKindOf: Number)
+		ifTrue: [ ^ self wollokNumberFrom: aValue ]
 ]
