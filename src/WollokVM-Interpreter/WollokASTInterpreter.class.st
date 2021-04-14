@@ -42,7 +42,16 @@ WollokASTInterpreter >> interpretProgram: aFileNode [
 { #category : #comparing }
 WollokASTInterpreter >> isFalse: aValue [
 
-	^aValue not 
+	^((aValue isKindOf: WollokVMLiteral) 
+		ifTrue: [ aValue literalValue  ]
+		ifFalse:[aValue]) not 
+]
+
+{ #category : #comparing }
+WollokASTInterpreter >> isTrue: aValue [
+
+	^(self isFalse: aValue) not
+	
 ]
 
 { #category : #bindings }
