@@ -74,24 +74,78 @@ WollokASTInterpreter >> transform: anOperationString [
 	^anOperationString asSymbol  
 ]
 
+{ #category : #processing }
+WollokASTInterpreter >> translateBinaryOperationFrom: aWollokBinaryOperationNode [ 
+
+	|operationString|
+	
+	operationString := aWollokBinaryOperationNode operation value.
+
+	operationString = '&&' ifTrue:[^#&].	
+	operationString = '||' ifTrue:[^#|].
+	operationString = '==' ifTrue:[^#=].
+	operationString = '===' ifTrue:[^#==].
+	
+	^operationString asSymbol  
+]
+
+{ #category : #processing }
+WollokASTInterpreter >> translateFeatureCallFrom: aWollokBinaryOperationNode [ 
+
+	|featureString|
+	
+	featureString := aWollokBinaryOperationNode feature value.
+	
+	aWollokBinaryOperationNode arguments size = 0 ifTrue: [ ^featureString asSymbol ].
+	aWollokBinaryOperationNode arguments size = 1 ifTrue: [ ^(featureString , ':') asSymbol ]
+	
+]
+
+{ #category : #processing }
+WollokASTInterpreter >> translateUnaryOperationFrom: aWollokBinaryOperationNode [ 
+
+	|operationString|
+	
+	operationString := aWollokBinaryOperationNode operation value.
+
+	operationString = '-' ifTrue:[^#negated].
+	
+	^operationString asSymbol  
+]
+
 { #category : #'as yet unclassified' }
 WollokASTInterpreter >> visitBinaryOperation: aWollokBinaryOperationNode [ 
 		
-	|leftValue rightValue operation value| 	
+	|leftValue rightValue operationSymbol result| 	
 		
-	leftValue:= aWollokBinaryOperationNode leftOperand acceptVisitor: self.
-	rightValue := aWollokBinaryOperationNode rightOperand acceptVisitor: self.
-	operation :=self transform: (aWollokBinaryOperationNode operation value).
+	leftValue := (aWollokBinaryOperationNode leftOperand acceptVisitor: self) literalValue.
+	rightValue := (aWollokBinaryOperationNode rightOperand acceptVisitor: self) literalValue.
+	operationSymbol := self translateBinaryOperationFrom: aWollokBinaryOperationNode.
 	
-	value := leftValue literalValue perform: operation with: rightValue literalValue. 
+	result := leftValue perform: operationSymbol with: rightValue. 
 	
-	^self wollokVMLiteralFrom: value
+	^self wollokVMLiteralFrom: result
 ]
 
 { #category : #visiting }
 WollokASTInterpreter >> visitBooleanLiteral: aWollokBooleanLiteralNode [ 
 
 	^ self wollokBooleanFrom: aWollokBooleanLiteralNode booleanValue 
+]
+
+{ #category : #'as yet unclassified' }
+WollokASTInterpreter >> visitMemberFeatureCall: aWollokMemberFeatureCallNode [ 
+	|receiver message arguments result|
+	
+	receiver := (aWollokMemberFeatureCallNode receiver acceptVisitor: self) literalValue.
+	message := self translateFeatureCallFrom: aWollokMemberFeatureCallNode.
+	arguments := aWollokMemberFeatureCallNode arguments collect: [ :arg| (arg acceptVisitor: self) literalValue].
+	
+	arguments size = 0 ifTrue: [result := receiver perform: message ].
+	arguments size = 1 ifTrue: [result := receiver perform: message with: arguments first].
+	arguments size > 1 ifTrue: [result := receiver perform: message withArguments: arguments].
+	
+	^self wollokVMLiteralFrom: result
 ]
 
 { #category : #visiting }
@@ -102,7 +156,15 @@ WollokASTInterpreter >> visitNumberLiteral: aWollokNumberLiteralNode [
 
 { #category : #'as yet unclassified' }
 WollokASTInterpreter >> visitUnaryOperation: aWollokUnaryOperationNode [ 
-	self shouldBeImplemented.
+	
+	|rightValue operationSymbol result|
+	
+	rightValue := (aWollokUnaryOperationNode rightOperand acceptVisitor: self) literalValue.
+	operationSymbol := self translateUnaryOperationFrom: aWollokUnaryOperationNode.
+	
+	result := rightValue perform: operationSymbol. 
+	
+	^self wollokVMLiteralFrom: result
 ]
 
 { #category : #literals }
