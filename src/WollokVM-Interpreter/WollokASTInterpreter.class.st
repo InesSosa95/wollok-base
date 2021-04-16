@@ -74,15 +74,21 @@ WollokASTInterpreter >> transform: anOperationString [
 	^anOperationString asSymbol  
 ]
 
-{ #category : #processing }
-WollokASTInterpreter >> translateBinaryOperationFrom: aWollokBinaryOperationNode [ 
+{ #category : #'as yet unclassified' }
+WollokASTInterpreter >> translateBinaryOperationFrom: aWollokBinaryOperationNode for: aLiteralValue [ 
 
 	|operationString|
 	
 	operationString := aWollokBinaryOperationNode operation value.
 
-	operationString = '&&' ifTrue:[^#&].	
-	operationString = '||' ifTrue:[^#|].
+	(aLiteralValue isKindOf: Boolean) ifTrue: [
+		operationString = '&&' ifTrue:[^#&].	
+		operationString = '||' ifTrue:[^#|].].
+
+	(aLiteralValue isKindOf: String) ifTrue: [
+		operationString = '+' ifTrue:[^#,].	
+		].
+	
 	operationString = '==' ifTrue:[^#=].
 	operationString = '===' ifTrue:[^#==].
 	
@@ -120,7 +126,7 @@ WollokASTInterpreter >> visitBinaryOperation: aWollokBinaryOperationNode [
 		
 	leftValue := (aWollokBinaryOperationNode leftOperand acceptVisitor: self) literalValue.
 	rightValue := (aWollokBinaryOperationNode rightOperand acceptVisitor: self) literalValue.
-	operationSymbol := self translateBinaryOperationFrom: aWollokBinaryOperationNode.
+	operationSymbol := self translateBinaryOperationFrom: aWollokBinaryOperationNode for: leftValue.
 	
 	result := leftValue perform: operationSymbol with: rightValue. 
 	
@@ -154,6 +160,12 @@ WollokASTInterpreter >> visitNumberLiteral: aWollokNumberLiteralNode [
 	^ self wollokNumberFrom: aWollokNumberLiteralNode numberValue
 ]
 
+{ #category : #visiting }
+WollokASTInterpreter >> visitStringLiteral: aWollokStringLiteralNode [ 
+
+	^ self wollokStringFrom: aWollokStringLiteralNode value value 
+]
+
 { #category : #'as yet unclassified' }
 WollokASTInterpreter >> visitUnaryOperation: aWollokUnaryOperationNode [ 
 	
@@ -185,10 +197,24 @@ WollokASTInterpreter >> wollokNumberFrom: anInteger [
 		yourself
 ]
 
+{ #category : #literals }
+WollokASTInterpreter >> wollokStringFrom: aString [
+
+	^ WollokVMLiteral new
+		wollokClass: (self resolve: 'wollok.lang.String');
+		literalValue: aString withoutQuoting ;
+		yourself
+]
+
 { #category : #transforming }
 WollokASTInterpreter >> wollokVMLiteralFrom: aValue [
 	(aValue isKindOf: Boolean)
 		ifTrue: [ ^ self wollokBooleanFrom: aValue ].
 	(aValue isKindOf: Number)
-		ifTrue: [ ^ self wollokNumberFrom: aValue ]
+		ifTrue: [ ^ self wollokNumberFrom: aValue ].
+	(aValue isKindOf: String)
+		ifTrue: [ ^ self wollokStringFrom: aValue ].
+		
+	"Si llega hasta aqui el tipo no esta soportado aun."
+	self shouldBeImplemented 
 ]
