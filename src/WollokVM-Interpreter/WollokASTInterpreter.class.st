@@ -60,20 +60,6 @@ WollokASTInterpreter >> resolve: aString [
 	^ bindings at: aString
 ]
 
-{ #category : #processing }
-WollokASTInterpreter >> transform: anOperationString [
-
-	anOperationString = '&&' ifTrue:[^#&].
-	
-	anOperationString = '||' ifTrue:[^#|].
-
-	anOperationString = '==' ifTrue:[^#=].	
-
-	anOperationString = '===' ifTrue:[^#==].
-	
-	^anOperationString asSymbol  
-]
-
 { #category : #'as yet unclassified' }
 WollokASTInterpreter >> translateBinaryOperationFrom: aWollokBinaryOperationNode for: aLiteralValue [ 
 
@@ -137,6 +123,17 @@ WollokASTInterpreter >> visitBinaryOperation: aWollokBinaryOperationNode [
 WollokASTInterpreter >> visitBooleanLiteral: aWollokBooleanLiteralNode [ 
 
 	^ self wollokBooleanFrom: aWollokBooleanLiteralNode booleanValue 
+]
+
+{ #category : #'as yet unclassified' }
+WollokASTInterpreter >> visitIfExpression: aWollokIfExpressionNode [ 
+	|conditionResult result|
+	
+	conditionResult := (aWollokIfExpressionNode condition acceptVisitor: self) literalValue.
+	
+	^conditionResult 
+		ifTrue: [ aWollokIfExpressionNode then acceptVisitor: self ]
+		ifFalse: [ aWollokIfExpressionNode else acceptVisitor: self ]
 ]
 
 { #category : #'as yet unclassified' }
