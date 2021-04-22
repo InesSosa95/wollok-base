@@ -54,6 +54,17 @@ WollokASTInterpreter >> isTrue: aValue [
 	
 ]
 
+{ #category : #'as yet unclassified' }
+WollokASTInterpreter >> perform: aSelector on: aReceiver [
+
+
+	(aReceiver isKindOf: WollokVMClass)
+		ifTrue: [ | methods |
+			methods := aReceiver ast acceptVisitor: self.
+			(methods select: [ :method | method name value = aSelector ]) first acceptVisitor: self ]
+		ifFalse: [ aReceiver perform: aSelector ]
+]
+
 { #category : #bindings }
 WollokASTInterpreter >> resolve: aString [ 
 	
@@ -119,10 +130,30 @@ WollokASTInterpreter >> visitBinaryOperation: aWollokBinaryOperationNode [
 	^self wollokVMLiteralFrom: result
 ]
 
+{ #category : #'as yet unclassified' }
+WollokASTInterpreter >> visitBlockExpression: aWollokBlockExpressionNode [
+
+	^ aWollokBlockExpressionNode expressions
+		do: [ :expression | expression acceptVisitor: self ]
+]
+
 { #category : #visiting }
 WollokASTInterpreter >> visitBooleanLiteral: aWollokBooleanLiteralNode [ 
 
 	^ self wollokBooleanFrom: aWollokBooleanLiteralNode booleanValue 
+]
+
+{ #category : #'as yet unclassified' }
+WollokASTInterpreter >> visitConstructorCall: aWollokConstructorCallNode [
+
+	^bindings
+		at: (aWollokConstructorCallNode classRef acceptVisitor: self)
+]
+
+{ #category : #'as yet unclassified' }
+WollokASTInterpreter >> visitFile: aWollokFileNode [ 
+	
+	^aWollokFileNode elements first methods
 ]
 
 { #category : #'as yet unclassified' }
@@ -137,24 +168,40 @@ WollokASTInterpreter >> visitIfExpression: aWollokIfExpressionNode [
 ]
 
 { #category : #'as yet unclassified' }
-WollokASTInterpreter >> visitMemberFeatureCall: aWollokMemberFeatureCallNode [ 
-	|receiver message arguments result|
+WollokASTInterpreter >> visitMemberFeatureCall: aWollokMemberFeatureCallNode [
+
+	| receiver message arguments result |
+	receiver := (aWollokMemberFeatureCallNode receiver
+		acceptVisitor: self) literalValue.
+	message := self
+		translateFeatureCallFrom: aWollokMemberFeatureCallNode.
+	arguments := aWollokMemberFeatureCallNode arguments
+		collect: [ :arg | (arg acceptVisitor: self) literalValue ].
+		
+	arguments size = 0 ifTrue: [ result := self perform: message on: receiver ].
+	arguments size = 1	ifTrue: [ result := self perform: message on: receiver with: arguments first ].
+	arguments size > 1	ifTrue: [ result := self	perform: message on: receiver withArguments: arguments ].
+			
+	^ self wollokVMLiteralFrom: result
+]
+
+{ #category : #'as yet unclassified' }
+WollokASTInterpreter >> visitMethodDeclaration: aWollokMethodDeclarationNode [ 
+
+	^aWollokMethodDeclarationNode expression acceptVisitor: self
 	
-	receiver := (aWollokMemberFeatureCallNode receiver acceptVisitor: self) literalValue.
-	message := self translateFeatureCallFrom: aWollokMemberFeatureCallNode.
-	arguments := aWollokMemberFeatureCallNode arguments collect: [ :arg| (arg acceptVisitor: self) literalValue].
-	
-	arguments size = 0 ifTrue: [result := receiver perform: message ].
-	arguments size = 1 ifTrue: [result := receiver perform: message with: arguments first].
-	arguments size > 1 ifTrue: [result := receiver perform: message withArguments: arguments].
-	
-	^self wollokVMLiteralFrom: result
 ]
 
 { #category : #visiting }
 WollokASTInterpreter >> visitNumberLiteral: aWollokNumberLiteralNode [ 
 
 	^ self wollokNumberFrom: aWollokNumberLiteralNode numberValue
+]
+
+{ #category : #'as yet unclassified' }
+WollokASTInterpreter >> visitQualifiedName: aWollokQualifiedNameNode [
+
+	^ aWollokQualifiedNameNode wollokClassName
 ]
 
 { #category : #visiting }
@@ -174,6 +221,14 @@ WollokASTInterpreter >> visitUnaryOperation: aWollokUnaryOperationNode [
 	result := rightValue perform: operationSymbol. 
 	
 	^self wollokVMLiteralFrom: result
+]
+
+{ #category : #'as yet unclassified' }
+WollokASTInterpreter >> visitVariableDeclaration: aWollokVariableDeclarationNode [ 
+
+	aWollokVariableDeclarationNode variable.
+	"hay que trabajar con el stack. -isosa"
+	self halt.
 ]
 
 { #category : #literals }

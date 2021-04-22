@@ -16,7 +16,13 @@ WollokQualifiedNameNode >> acceptVisitor: anAbstractNodeVisitor [
 { #category : #converting }
 WollokQualifiedNameNode >> asWollokQualifiedName [
 	
-	^ ((self identifiers collect: [ :e | e value ]) joinUsing: '.') asWollokQualifiedName 
+	^ ((self identifiers collect: [ :e | e value ]) joinUsing: '.') asWollokQualifiedName
+]
+
+{ #category : #converting }
+WollokQualifiedNameNode >> className [ 
+	
+	^ ((self identifiers collect: [ :e | e value ]) joinUsing: '.')
 ]
 
 { #category : #generated }
@@ -49,4 +55,10 @@ WollokQualifiedNameNode >> periodTokens [
 { #category : #generated }
 WollokQualifiedNameNode >> periodTokens: anOrderedCollection [
 	periodTokens := anOrderedCollection
+]
+
+{ #category : #converting }
+WollokQualifiedNameNode >> wollokClassName [ 
+	
+	^ ((self identifiers collect: [ :e | e value ]) joinUsing: '.')
 ]

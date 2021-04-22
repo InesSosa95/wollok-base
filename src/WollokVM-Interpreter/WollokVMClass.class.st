@@ -15,6 +15,11 @@ WollokVMClass >> allVariables [
 	^ #()
 ]
 
+{ #category : #'as yet unclassified' }
+WollokVMClass >> answerToEverything [
+	self shouldBeImplemented.
+]
+
 { #category : #accessing }
 WollokVMClass >> ast [
 	^ ast
@@ -23,6 +28,11 @@ WollokVMClass >> ast [
 { #category : #accessing }
 WollokVMClass >> ast: anObject [
 	ast := anObject
+]
+
+{ #category : #'as yet unclassified' }
+WollokVMClass >> literalValue [
+	^self
 ]
 
 { #category : #accessing }
