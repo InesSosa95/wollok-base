@@ -2,7 +2,8 @@ Class {
 	#name : #WollokASTInterpreter,
 	#superclass : #Object,
 	#instVars : [
-		'bindings'
+		'bindings',
+		'variableAssociation'
 	],
 	#category : #'WollokVM-Interpreter'
 }
@@ -117,6 +118,13 @@ WollokASTInterpreter >> translateUnaryOperationFrom: aWollokBinaryOperationNode 
 ]
 
 { #category : #'as yet unclassified' }
+WollokASTInterpreter >> variableAssociation [
+	
+	
+	^variableAssociation ifNil: [  variableAssociation :=  Dictionary new ] ifNotNil:  [ :association | association  ]
+]
+
+{ #category : #'as yet unclassified' }
 WollokASTInterpreter >> visitBinaryOperation: aWollokBinaryOperationNode [ 
 		
 	|leftValue rightValue operationSymbol result| 	
@@ -211,6 +219,19 @@ WollokASTInterpreter >> visitStringLiteral: aWollokStringLiteralNode [
 ]
 
 { #category : #'as yet unclassified' }
+WollokASTInterpreter >> visitTry: aWollokTryNode [
+
+	[ ^ [ aWollokTryNode expression acceptVisitor: self ]
+		on: Error
+		do: [ :signal | 
+			aWollokTryNode catchBlocks
+				detect: [ :catch | catch exceptionType className = signal className ]
+				ifFound: [ :catch | catch acceptVisitor: self ]
+				ifNone: [ signal signal ] ] ]
+		ensure: [ aWollokTryNode alwaysExpression acceptVisitor: self ]
+]
+
+{ #category : #'as yet unclassified' }
 WollokASTInterpreter >> visitUnaryOperation: aWollokUnaryOperationNode [ 
 	
 	|rightValue operationSymbol result|
@@ -226,9 +247,7 @@ WollokASTInterpreter >> visitUnaryOperation: aWollokUnaryOperationNode [
 { #category : #'as yet unclassified' }
 WollokASTInterpreter >> visitVariableDeclaration: aWollokVariableDeclarationNode [ 
 
-	aWollokVariableDeclarationNode variable.
-	"hay que trabajar con el stack. -isosa"
-	self halt.
+	self variableAssociation at: (aWollokVariableDeclarationNode variable name) put: (aWollokVariableDeclarationNode right acceptVisitor: self)
 ]
 
 { #category : #literals }
