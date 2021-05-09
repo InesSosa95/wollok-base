@@ -16,7 +16,7 @@ WollokQualifiedNameNode >> acceptVisitor: anAbstractNodeVisitor [
 { #category : #converting }
 WollokQualifiedNameNode >> asWollokQualifiedName [
 	
-	^ ((self identifiers collect: [ :e | e value ]) joinUsing: '.') asWollokQualifiedName
+	^ 'wollok.lang.' , ((self identifiers collect: [ :e | e value ]) joinUsing: '.')
 ]
 
 { #category : #converting }
@@ -60,5 +60,5 @@ WollokQualifiedNameNode >> periodTokens: anOrderedCollection [
 { #category : #converting }
 WollokQualifiedNameNode >> wollokClassName [ 
 	
-	^ ((self identifiers collect: [ :e | e value ]) joinUsing: '.')
+	^((self identifiers collect: [ :e | e value ]) joinUsing: '.') 
 ]

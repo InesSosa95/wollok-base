@@ -59,7 +59,7 @@ WollokASTInterpreter >> isTrue: aValue [
 WollokASTInterpreter >> perform: aSelector on: aReceiver [
 
 
-	(aReceiver isKindOf: WollokVMClass)
+	^(aReceiver isKindOf: WollokVMClass)
 		ifTrue: [ | methods |
 			methods := aReceiver ast acceptVisitor: self.
 			(methods select: [ :method | method name value = aSelector ]) first acceptVisitor: self ]
@@ -141,8 +141,7 @@ WollokASTInterpreter >> visitBinaryOperation: aWollokBinaryOperationNode [
 { #category : #'as yet unclassified' }
 WollokASTInterpreter >> visitBlockExpression: aWollokBlockExpressionNode [
 
-	^ aWollokBlockExpressionNode expressions
-		do: [ :expression | expression acceptVisitor: self ]
+	^aWollokBlockExpressionNode expressions inject: nil into:[:result :expression | expression acceptVisitor: self]. 
 ]
 
 { #category : #visiting }
@@ -152,10 +151,21 @@ WollokASTInterpreter >> visitBooleanLiteral: aWollokBooleanLiteralNode [
 ]
 
 { #category : #'as yet unclassified' }
+WollokASTInterpreter >> visitClosure: aWollokClosureNode [
+	
+	aWollokClosureNode expression expressions
+		do: [ :expression | expression acceptVisitor: self ]
+]
+
+{ #category : #'as yet unclassified' }
 WollokASTInterpreter >> visitConstructorCall: aWollokConstructorCallNode [
 
+	|className|
+	
+	className:= (aWollokConstructorCallNode classRef acceptVisitor: self).
+	
 	^bindings
-		at: (aWollokConstructorCallNode classRef acceptVisitor: self)
+		at: className ifAbsent:[bindings at: 'wollok.lang.', className  ]
 ]
 
 { #category : #'as yet unclassified' }
@@ -219,6 +229,13 @@ WollokASTInterpreter >> visitStringLiteral: aWollokStringLiteralNode [
 ]
 
 { #category : #'as yet unclassified' }
+WollokASTInterpreter >> visitThrow: aWollokThrowNode [ 
+
+	^aWollokThrowNode exception acceptVisitor: self
+	
+]
+
+{ #category : #'as yet unclassified' }
 WollokASTInterpreter >> visitTry: aWollokTryNode [
 
 	[ ^ [ aWollokTryNode expression acceptVisitor: self ]
@@ -227,7 +244,7 @@ WollokASTInterpreter >> visitTry: aWollokTryNode [
 			aWollokTryNode catchBlocks
 				detect: [ :catch | catch exceptionType className = signal className ]
 				ifFound: [ :catch | catch acceptVisitor: self ]
-				ifNone: [ signal signal ] ] ]
+				ifNone: [ signal pass ] ] ]
 		ensure: [ aWollokTryNode alwaysExpression acceptVisitor: self ]
 ]
 
@@ -279,12 +296,15 @@ WollokASTInterpreter >> wollokStringFrom: aString [
 
 { #category : #transforming }
 WollokASTInterpreter >> wollokVMLiteralFrom: aValue [
+
 	(aValue isKindOf: Boolean)
 		ifTrue: [ ^ self wollokBooleanFrom: aValue ].
 	(aValue isKindOf: Number)
 		ifTrue: [ ^ self wollokNumberFrom: aValue ].
 	(aValue isKindOf: String)
 		ifTrue: [ ^ self wollokStringFrom: aValue ].
+	(aValue isKindOf: Exception)
+		ifTrue: [ ^ aValue signal ]
 		
 	"Si llega hasta aqui el tipo no esta soportado aun."
 	self shouldBeImplemented 

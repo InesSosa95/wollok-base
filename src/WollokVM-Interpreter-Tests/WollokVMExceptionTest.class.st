@@ -13,7 +13,7 @@ class MyFaillingClass {
 	var a = 7
 	
 	method boom(){
-		self.error("Boom!")
+		throw new Exception(message="Boom!")
 	}
 	
 	method noboom() {  }
@@ -39,7 +39,7 @@ class MyFaillingClass {
 	var a = 7
 	
 	method boom(){
-		self.error("Boom!")
+		throw new Exception(message="Boom!")
 	}
 	
 	method noboom() {  }
@@ -64,7 +64,7 @@ class MyFaillingClass {
 	var a = 7
 	
 	method boom(){
-		self.error("Boom!")
+		throw new Exception(message="Boom!")
 	}
 }'.
 
@@ -87,7 +87,7 @@ class MyFaillingClass {
 	var a = 7
 	
 	method boom(){
-		self.error("Boom!")
+		throw new Exception(message="Boom!")
 	}
 }'.
 
