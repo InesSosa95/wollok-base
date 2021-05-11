@@ -1,6 +1,7 @@
 Trait {
 	#name : #TWollokAbstractNodeNodeVisitor,
 	#traits : 'TSmaCCParseNodeVisitor',
+	#classTraits : 'TSmaCCParseNodeVisitor classTrait',
 	#category : #'Wollok-Parser'
 }
 
